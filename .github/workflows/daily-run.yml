@@ -39,18 +39,7 @@ jobs:
         env:
           RUN_ONCE: 'true'
         run: python main.py
-
-      - name: Mostrar docs/index.html (debug)   # remova depois que validar
-        if: always()
-        run: |
-          echo "=== início docs/index.html ==="
-          if [ -f docs/index.html ]; then
-            sed -n '1,200p' docs/index.html || true
-          else
-            echo "docs/index.html não encontrado"
-          fi
-          echo "=== fim docs/index.html ==="
-
+      
       - name: Commitar e enviar docs/index.html (usando GITHUB_TOKEN)
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
