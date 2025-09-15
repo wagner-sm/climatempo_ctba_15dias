@@ -2,7 +2,7 @@ name: Execução Diária - Gerar Página
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # diariamente à meia-noite UTC (ajuste conforme desejar)
+    - cron: '3 0 * * *'  # diariamente à meia-noite UTC (ajuste conforme desejar)
   workflow_dispatch:
 
 jobs:
