@@ -1,9 +1,13 @@
-name: Execução Diária - Gerar Página
+name: Execução Diária - Gerar Página (GITHUB_TOKEN)
+
+# Permissões explícitas para permitir escrita via GITHUB_TOKEN
+permissions:
+  contents: write
 
 on:
   schedule:
-    - cron: '0 3 * * *'   # Executa diariamente à meia-noite (UTC). Ajuste conforme precisar.
-  workflow_dispatch:     # Permite execução manual
+    - cron: '0 3 * * *'   # 00:00 America/Sao_Paulo (03:00 UTC)
+  workflow_dispatch:     # permite execução manual
 
 jobs:
   run-and-publish:
@@ -14,6 +18,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -27,7 +32,6 @@ jobs:
 
       - name: Instalar dependências do Playwright e Chromium
         run: |
-          # instala libs do SO necessárias e o navegador Chromium
           playwright install-deps || true
           playwright install chromium
 
@@ -36,8 +40,7 @@ jobs:
           RUN_ONCE: 'true'
         run: python main.py
 
-      # Passo opcional para depuração — mostra o html gerado no log
-      - name: Mostrar docs/index.html (debug)
+      - name: Mostrar docs/index.html (debug)   # remova depois que validar
         if: always()
         run: |
           echo "=== início docs/index.html ==="
@@ -48,21 +51,22 @@ jobs:
           fi
           echo "=== fim docs/index.html ==="
 
-      - name: Commitar e enviar docs/index.html
+      - name: Commitar e enviar docs/index.html (usando GITHUB_TOKEN)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
-          # configura usuário de commit
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # adiciona arquivo gerado
           git add docs/index.html || true
 
-          # só commita se houver mudanças
           if ! git diff --staged --quiet; then
             git commit -m "Atualiza página de previsão (gerado pelo Actions) [skip ci]"
-            git push
+
+            # push usando credenciais já configuradas pelo actions/checkout (GITHUB_TOKEN)
+            git push origin HEAD:${GITHUB_REF_NAME}
+
             echo "docs/index.html atualizado e enviado."
           else
             echo "Nenhuma alteração em docs/index.html — nada a commitar."
