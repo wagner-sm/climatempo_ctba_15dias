@@ -169,5 +169,6 @@ def loop_consultas():
             sys.exit(0)
 
 
-if __name__ == "__main__":
-    loop_consultas()
+if __name__ == "__main__":  
+    if os.getenv("RUN_ONCE", "false").lower() in ("1", "true", "yes"):  
+        rodar()
