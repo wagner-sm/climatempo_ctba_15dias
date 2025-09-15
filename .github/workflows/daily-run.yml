@@ -1,0 +1,45 @@
+name: Execução Diária - Gerar Página
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # diariamente à meia-noite UTC (ajuste conforme desejar)
+  workflow_dispatch:
+
+jobs:
+  run-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependências e Playwright
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          playwright install-deps
+          playwright install chromium
+
+      - name: Executar script
+        run: python main.py
+
+      - name: Commitar e enviar docs/index.html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          # só commita se houver mudanças
+          if ! git diff --staged --quiet; then
+            git commit -m "Atualiza página de previsão (gerado pelo Actions) [skip ci]"
+            git push
+          else
+            echo "Nenhuma alteração em docs/index.html"
+          fi
