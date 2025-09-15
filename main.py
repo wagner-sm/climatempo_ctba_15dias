@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import base64
 from playwright.sync_api import sync_playwright
+from zoneinfo import ZoneInfo
 
 # Logger
 logging.basicConfig(
@@ -95,7 +96,10 @@ def criar_pagina_html(dados_15, img_path, caminho_html):
     </table>  
     """.format(rows="\n".join(linhas))  
   
-    # Usando f-string corretamente com tabela_html  
+    # Hora em Brasília (America/Sao_Paulo)  
+    agora_br = datetime.now(ZoneInfo("America/Sao_Paulo"))  
+    rodape = agora_br.strftime('%d/%m/%Y %H:%M:%S')  
+  
     html = f"""  
     <!doctype html>  
     <html lang="pt-BR">  
@@ -118,10 +122,16 @@ def criar_pagina_html(dados_15, img_path, caminho_html):
         <h2>Gráfico</h2>  
         <img src="data:image/png;base64,{img_b64}" alt="Gráfico de temperaturas"/>  
       </div>  
-      <footer><small>Atualizado em {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</small></footer>  
+      <footer><small>Atualizado em {rodape}</small></footer>  
     </body>  
     </html>  
-    """
+    """  
+  
+    caminho_html.parent.mkdir(parents=True, exist_ok=True)  
+    with open(caminho_html, 'w', encoding='utf-8') as f:  
+        f.write(html)  
+  
+    logger.info(f"Página HTML salva em {caminho_html}")
 
     caminho_html.parent.mkdir(parents=True, exist_ok=True)
     with open(caminho_html, 'w', encoding='utf-8') as f:
